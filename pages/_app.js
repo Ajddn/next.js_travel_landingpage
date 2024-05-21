@@ -1,36 +1,33 @@
-import { useAuthState } from "react-firebase-hooks/auth";
-import { db, auth } from "../firebase";
+import Router from 'next/router';
+import Head from 'next/head';
+import NProgress from 'nprogress';
+import { ChakraProvider } from '@chakra-ui/react';
 
-import firebase from "firebase";
-
-import "tailwindcss/tailwind.css";
-import "../styles/global.css";
-import "emoji-mart/css/emoji-mart.css";
-import Login from "./login";
-import { Loader } from "../components";
-import { useEffect } from "react";
+import Layout from '../components/Layout';
 
 function MyApp({ Component, pageProps }) {
-  const [user, loading] = useAuthState(auth);
+  NProgress.configure({ showSpinner: false });
 
-  useEffect(() => {
-    if (user) {
-      db.collection("users").doc(user.uid).set(
-        {
-          email: user.email,
-          username: user.displayName,
-          lastSeen: firebase.firestore.FieldValue.serverTimestamp(),
-          photoURL: user.photoURL,
-        },
-        { merge: true }
-      );
-    }
-  }, [user]);
+  Router.events.on('routeChangeStart', () => {
+    NProgress.start();
+  });
 
-  if (loading) return <Loader />;
-  if (!user) return <Login />;
+  Router.events.on('routeChangeComplete', () => {
+    NProgress.done();
+  });
 
-  return <Component {...pageProps} />;
+  return (
+    <>
+      <Head>
+        <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css' integrity='sha512-42kB9yDlYiCEfx2xVwq0q7hT4uf26FUgSIZBK8uiaEnTdShXjwr8Ip1V4xGJMg3mHkUt9nNuTDxunHF0/EgxLQ==' crossOrigin='anonymous' referrerPolicy='no-referrer' />
+      </Head>
+      <ChakraProvider>
+        <Layout>
+          <Component {...pageProps} />
+        </Layout>
+      </ChakraProvider>
+    </>
+  );
 }
 
 export default MyApp;
